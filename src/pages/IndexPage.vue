@@ -11,5 +11,6 @@ const callback = (response) => {
 </script>
 
 <template>
+  TEST
   <GoogleLogin clientId="247346265934-ksi885k87vtrcqh7tvmcgeca9fvqr0fd.apps.googleusercontent.com" :callback="callback"/>
 </template>

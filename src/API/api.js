@@ -8,35 +8,35 @@ const { cookies } = useCookies();
 const api_url = process.env.VUE_APP_API_URL;
 export default {
   async getAuthorization(_data){
-    
-   if(!_data){
-    if(!cookies.get('_UID_')){
-          cookies.remove('_UID_');
-          localStorage.removeItem('routeParams');
-          Swal.fire({
-            title: 'The Session Timed Out',
-            text: 'Please log in again',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              return
-            }
-          });          
-      return null;
-    }
-  }
-     let key = process.env.VUE_APP_PCR_KEY;
-    key = CryptoJS.enc.Utf8.parse(key); // replace with your own secret key
-    let iv = CryptoJS.lib.WordArray.random(16); // generate a random 16-byte IV
-    const jsonData = JSON.stringify( _data??(cookies.get('_UID_')));
-    const encryptedData = CryptoJS.AES.encrypt(jsonData, key,  {iv} ).toString();    
-    return {
-      headers:{
-        'X-IV': iv.toString(CryptoJS.enc.Base64),
-        Authorization:'Bearer '+ encryptedData,
-      } 
-    }
+    return {};
+  //  if(!_data){
+  //   if(!cookies.get('_UID_')){
+  //         cookies.remove('_UID_');
+  //         localStorage.removeItem('routeParams');
+  //         Swal.fire({
+  //           title: 'The Session Timed Out',
+  //           text: 'Please log in again',
+  //           icon: 'error',
+  //           confirmButtonText: 'OK'
+  //         }).then((result) => {
+  //           if (result.isConfirmed) {
+  //             return
+  //           }
+  //         });          
+  //     return null;
+  //   }
+  // }
+  //    let key = process.env.VUE_APP_PCR_KEY;
+  //   key = CryptoJS.enc.Utf8.parse(key); // replace with your own secret key
+  //   let iv = CryptoJS.lib.WordArray.random(16); // generate a random 16-byte IV
+  //   const jsonData = JSON.stringify( _data??(cookies.get('_UID_')));
+  //   const encryptedData = CryptoJS.AES.encrypt(jsonData, key,  {iv} ).toString();    
+  //   return {
+  //     headers:{
+  //       'X-IV': iv.toString(CryptoJS.enc.Base64),
+  //       Authorization:'Bearer '+ encryptedData,
+  //     } 
+  //   }
   },
 
   validateResponse(error){
@@ -69,6 +69,27 @@ export default {
     
   },
 
+  //log in
+  async Login(username, password){
+  var url = api_url+'/auth/login'
+  const config = await this.getAuthorization();
+  const body = {
+    username: username,
+    password: password
+  }
+  try {      
+    const response = await axios.post(url, body, config);      
+    if (response && response.data && response.status == 200) {
+      return response.data;
+    } else{
+      console.log('api',response);
+      return {error:response}
+    }
+  } catch (error) {
+    console.log('api',error);
+    return { error: error.response }
+  }
+},    
 
   ///// test 
   async test(userEmail) {
@@ -111,18 +132,12 @@ export default {
 
         ///// new User
     async newUser(param) {
-      var url = api_url+'/user/new'
+      var url = api_url+'/admin/addUser'
       const config = await this.getAuthorization();
-      const body = {
-        email:param.email,
-        userName:param.userName,
-        userType:param.userType,
-        officeId:param.userType === 'OFFICE_STAFF'? param.officeId.id:null,
-        privileges:param.privileges,
-       }
+      const body = param;
       try {      
         const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
+        if (response && response.data && response.status == 201) {
           return response.data;
         } else{
           console.log('newUser Error');
@@ -136,17 +151,9 @@ export default {
 
     //// update User
     async updateUser(param) {
-      var url = api_url+'/user/update'
+      var url = api_url+'/admin/updateUser'
       const config = await this.getAuthorization();
-      const body = {
-        email:param.email,
-        userName:param.userName,
-        userType:param.userType,
-        officeId:param.userType === 'OFFICE_STAFF'? param.officeId.id:null,
-        privileges:param.privileges,
-        status:param.status,
-        email_old:param.email_old,
-       }
+      const body = param
       try {      
         const response = await axios.post(url, body, config);
         if (response && response.data && response.status == 200) {
@@ -163,11 +170,9 @@ export default {
 
        ///// Delete User
     async deleteUser(param) {
-      var url = api_url+'/user/delete'
+      var url = api_url+'/admin/removeUser'
       const config = await this.getAuthorization();
-      const body = {
-        email:param.email,
-       }
+      const body = param
       try {      
         const response = await axios.post(url, body, config);
         if (response && response.data && response.status == 200) {
@@ -182,323 +187,29 @@ export default {
       }
     },  
 
-    ///// getAllUser 
-    async getAllUser() {
-      var url = api_url+'/user/all'
+    /// reset password to username
+    async resetPasswordToUsername(param) {
+      var url = api_url + '/auth/resetpw';
       const config = await this.getAuthorization();
-      const body = { }
-      try {      
-        const response = await axios.post(url, body, config);      
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log(response);
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        this.validateResponse(error)
-        return { error: error.response }??error
-      }
-    },    
-
-    ///// getAllOffice 
-    async getAllOffice() {
-      var url = api_url+'/office/all'
-      const config = await this.getAuthorization();
-      const body = { }
-      try {      
-        const response = await axios.post(url, body, config);      
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log(response);
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error);
-        this.validateResponse(error)
-        return { error: error.response }??error
-      }
-    },   
-    
-    ///// getOfficeData
-    async getOfficeData(id) {
-      var url = api_url+'/office/getOfficeData'
-      const config = await this.getAuthorization();
-      const body = { 
-        id:id
-      }
-      try {      
-        const response = await axios.post(url, body, config);      
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log(response);
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error);
-        this.validateResponse(error)
-        return { error: error.response }??error
-      }
-    },  
-
-    ///// new User
-    async newOffice(param) {
-      var url = api_url+'/office/new'
-      const config = await this.getAuthorization();
-      const body = {
-        code:param.code,
-        description:param.description,
-        is_sector:param.is_sector.val,
-        topOfficeId:param.hasTopOffice?param.topOfficeId.id:null,
-        }
-      try {      
+      const body = param;
+      try {
         const response = await axios.post(url, body, config);
         if (response && response.data && response.status == 200) {
           return response.data;
-        } else{
-          console.log('newOffice Error');
-          return {error:response}
+        } else {
+          console.log('resetPasswordToUsername Error');
+          return { error: response };
         }
       } catch (error) {
         console.log(error.response);
-        return { error: error.response }
+        return { error: error.response };
       }
-    },      
-
-    //// update Office
-    async updateOffice(param) {
-      var url = api_url+'/office/update'
-      const config = await this.getAuthorization();
-      const body = {
-        id:param.id,
-        code:param.code,
-        description:param.description,
-        is_sector:param.is_sector.val,
-        topOfficeId:param.hasTopOffice?param.topOfficeId.id:null,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('Update Office Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },       
-    
-    ///// Delete Office
-    async deleteOffice(param) {
-      var url = api_url+'/office/delete'
-      const config = await this.getAuthorization();
-      const body = {
-        id:param.id,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('deleteOffice Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },  
-
-    ///// getAllPcrSchedule 
-    async getAllPcrSchedule() {
-      var url = api_url+'/pcr_schedule/all'
-      const config = await this.getAuthorization();
-      const body = { }
-      try {      
-        const response = await axios.post(url, body, config);      
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log(response);
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error);
-        this.validateResponse(error)
-        return { error: error.response }??error
-      }
-    },    
-
-    ///// new PCR SCHED
-    async newSched(param) {
-      var url = api_url+'/pcr_schedule/new'
-      const config = await this.getAuthorization();
-      const body = {
-        dateStart:this.dateEN_US(param.dateStart),
-        dateEnd:this.dateEN_US(param.dateEnd),
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('newScedule Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },  
-    /**
-     * @param {String} pdate
-     * @returns String Date with timezone en-US
-     */
-    dateEN_US(pdate){
-      const date = new Date(pdate); // Replace this with your desired date
-
-        const options = {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          fractionalSecondDigits: 3, // Milliseconds with 3 digits
-          timeZoneName: 'short', // Add 'Z' for UTC
-        };
-
-        const formattedDate = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
-
-        // Create the desired format 'yyyy-MM-dd'T'HH:mm:ss.SSS'Z''
-        return `${formattedDate[4].value}-${formattedDate[0].value}-${formattedDate[2].value}T${formattedDate[6].value}:${formattedDate[8].value}:${formattedDate[10].value}.${formattedDate[12].value}Z`;
     },
 
-    ///// update PCR SCHED
-    async updateSched(param) {
-      var url = api_url+'/pcr_schedule/update'
-      console.log(this.dateEN_US(new Date()))
-      const config = await this.getAuthorization();
-      const body = {
-        dateStart:this.dateEN_US(param.dateStart),
-        dateEnd:this.dateEN_US(param.dateEnd),
-        id:param.id,
-        status:param.status,
-        }
-        console.log('@Body',param)
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('Update Schedule Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },      
 
-    ///// Delete Sched
-    async deleteSched(param) {
-      var url = api_url+'/pcr_schedule/delete'
-      const config = await this.getAuthorization();
-      const body = {
-        id:param.id,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('delete Sched Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },      
-
-    ///// new Employee
-    async newEmployee(param) {
-      var url = api_url+'/employee/new'
-      const config = await this.getAuthorization();
-      const body = {
-        lname:param.lname,
-        fname:param.fname,
-        mname:param.mname,
-        email:param.email,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('newEmployee Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },  
-
-    //// update Employee
-    async updateEmployee(param) {
-      var url = api_url+'/employee/update'
-      const config = await this.getAuthorization();
-      const body = {
-        id:param.id, 
-        lname:param.lname,
-        fname:param.fname,
-        mname:param.mname,
-        email:param.email,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('Update Employee Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },      
-
-        ///// Delete Employee
-    async deleteEmployee(param) {
-      var url = api_url+'/employee/delete'
-      const config = await this.getAuthorization();
-      const body = {
-        id:param.id,
-        }
-      try {      
-        const response = await axios.post(url, body, config);
-        if (response && response.data && response.status == 200) {
-          return response.data;
-        } else{
-          console.log('DelEmployee Error');
-          return {error:response}
-        }
-      } catch (error) {
-        console.log(error.response);
-        return { error: error.response }
-      }
-    },  
-
-    ///// getAllEmployee 
-    async getAllEmployee() {
-      var url = api_url+'/employee/all'
+    ///// getAllUser 
+    async getAllUser() {
+      var url = api_url+'/admin/allUsers'
       const config = await this.getAuthorization();
       const body = { }
       try {      
@@ -516,13 +227,11 @@ export default {
       }
     },    
 
-    ///// searchEmployee 
-    async searchEmployee(val) {
-      var url = api_url+'/employee/search'
+    ///// getQueueList 
+    async getQueueList(param) {
+      var url = api_url+'/queues/filter'
       const config = await this.getAuthorization();
-      const body = {
-        empName:val
-       }
+      const body = param??{date:new Date().toISOString().split('T')[0]}
       try {      
         const response = await axios.post(url, body, config);      
         if (response && response.data && response.status == 200) {
@@ -532,9 +241,179 @@ export default {
           return {error:response}
         }
       } catch (error) {
-        console.log(error.response);
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    }, 
+    
+        ///// getQueueLogs
+    async getQueueLogs(param) {
+      var url = api_url+'/queues/filter-logs'
+      const config = await this.getAuthorization();
+      const body = param??{date:new Date().toISOString().split('T')[0]}
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    },  
+    
+    async getHistory(param) {
+      var url = api_url+'/queues/user-today-logs'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
         this.validateResponse(error)
         return { error: error.response }??error
       }
     },     
+    
+    async getWaitingToday(param) {
+      var url = api_url+'/queues/waiting-today'
+      const config = await this.getAuthorization();
+      const body ={services_type:param??'Payment'}
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    },     
+       
+    async getCalledByUser(param) {
+      var url = api_url+'/queues/calledByUser-today'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    }, 
+    
+    async getCallNext(param) {
+      var url = api_url+'/queues/next'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    }, 
+    
+    async getAllServices() {
+      var url = api_url+'/admin/services'
+      const config = await this.getAuthorization();
+      const body = {}
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log(response);
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error);
+        this.validateResponse(error)
+        return { error: error.response }??error
+      }
+    },
+
+    async addService(param) {
+      var url = api_url+'/admin/services/new'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 201) {
+          return response.data;
+        } else{
+          console.log('addService Error');
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error.response);
+        return { error: error.response }
+      }
+    },
+
+    async updateService(param) {
+      var url = api_url+'/admin/services/update'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log('updateService Error');
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error.response);
+        return { error: error.response }
+      }
+    },
+
+    //deleteService
+    async deleteService(param) {
+      var url = api_url+'/admin/services/delete'
+      const config = await this.getAuthorization();
+      const body = param
+      try {      
+        const response = await axios.post(url, body, config);      
+        if (response && response.data && response.status == 200) {
+          return response.data;
+        } else{
+          console.log('deleteService Error');
+          return {error:response}
+        }
+      } catch (error) {
+        console.log(error.response);
+        return { error: error.response }
+      }
+    },
 }

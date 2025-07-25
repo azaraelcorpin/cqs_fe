@@ -1,22 +1,23 @@
 
 const routes = [
   ///Home
-  {
-    path: '/',
-    name:'home',
-    component: () => import('pages/IndexPage.vue'),
-    meta:{
-      title:'Home',
-      roles:[]
-    },
-    icon:'home',
-    visible:false,
-  },
+  // {
+  //   path: '/',
+  //   name:'home',
+  //   component: () => import('pages/IndexPage.vue'),
+  //   meta:{
+  //     title:'Home',
+  //     roles:[]
+  //   },
+  //   icon:'home',
+  //   visible:false,
+  // },
+
   ///Dashboard
   {
-    path: '/dashboard',
+    path: '/',
     name:'dashboard',
-    component: () => import('components/SelectEmployee.vue'),
+    component: () => import('src/pages/dashBoard.vue'),
     meta:{
       title:'Dashboard',
       roles:[]
@@ -24,159 +25,115 @@ const routes = [
     icon:'dashboard',
     visible:true,
   },
-  ///MyPCR
+  ///USER
   {
-    path: '/myPCR',
-    name:'myPCR',
-    component: () => import('pages/TreeSample.vue'),
+    path: '/Users',
+    name:'users',
+    component: () => import('pages/userMgt.vue'),
     meta:{
-      title:'My PCR',
-      roles:['INDIVIDUAL','OFFICE_HEAD']
-    },
-    icon:'person',
-    visible:true,
-  },
-  ///MyOffice
-  {
-    path: '/myOffice',
-    name:'myOffice',
-    component: () => import('pages/TestPages.vue'),
-    meta:{
-      title:'My Office',
-      roles:['OFFICE_HEAD','OFFICE_STAFF']
-    },
-    icon:'domain',
-    visible:true,
-    children:[
-      {
-        path: '/members',
-        component: () => import('pages/TestPage.vue'),
-        meta:{
-          title:'Members',
-        },
-        icon:'groups',
-        visible:true,
-      },
-      {
-        path: '/preassessments',
-        component: () => import('pages/TestPage.vue'),
-        meta:{
-          title:'Pre Assessments',
-        },
-        icon:'subject',
-        visible:true,
-      },
-    ],
-  },
-  ////PMT
-  {
-    path: '/PMT',
-    name:'PMT',
-    component: () => import('pages/sysAdmin/SysAdmin.vue'),
-    meta:{
-      title:'PMT',
-      roles:['PMT']
-    },
-    icon:'admin_panel_settings',
-    visible:true,
-    children:[
-      {
-        path: '/pcr_sched',
-        component: () => import('pages/PMT/ScheduleMgt.vue'),
-        meta:{
-          title:'PCR Schedule',
-        },
-        icon:'schedule',
-        visible:true,
-      },
-      {
-        path: '/mfo',
-        component: () => import('pages/sysAdmin/UserMgt.vue'),
-        meta:{
-          title:'MFO',
-        },
-        icon:'checklist',
-        visible:true,
-      },
-      {
-        path: '/commitments',
-        component: () => import('pages/sysAdmin/UserMgt.vue'),
-        meta:{
-          title:'Commitments',
-        },
-        icon:'task',
-        visible:true,
-      },
-    ],
-  },
-  ////HR
-  {
-    path: '/HR',
-    name:'HR',
-    component: () => import('pages/HR/HumanResource.vue'),
-    meta:{
-      title:'Human Resource',
-      roles:['HR']
+      title:'Users',
+      roles:['ADMIN']
     },
     icon:'groups',
     visible:true,
-    children:[
-      {
-        path: '/offices',
-        name:'offices',
-        component: () => import('pages/HR/OfficesMgt.vue'),
-        meta:{
-          title:'Office',
-        },
-        icon:'holiday_village',
-        visible:true,
-        children:[
-          {
-            path: '/offices/:id',
-            name:'office',
-            component: () => import('pages/HR/OfficeDetails.vue'),
-            meta:{
-              title:'Office Details',
-              roles:['HR','OFFICE_HEAD','OFFICE_STAFF']
-            },
-            visible:false,  
-          }
-        ]
-      },
-      {
-        path: '/employees',
-        component: () => import('pages/HR/EmployeeMgt.vue'),
-        meta:{
-          title:'Employees',
-        },
-        icon:'supervisor_account',
-        visible:true,
-      },
-    ],
-  },  
-  ///SysAdmin
+  },
+  ///Queues
   {
-    path: '/sysadm',
-    name:'sysadm',
-    component: () => import('pages/sysAdmin/SysAdmin.vue'),
+    path: '/Queues',
+    name:'queues',
+    component: () => import('pages/queueCtrl.vue'),
     meta:{
-      title:'System Admin',
+      title:'Queues',
+      roles:['ADMIN']
+    },
+    icon:'receipt_long',
+    visible:true,
+  },
+  ////Logs
+  {
+    path: '/Logs',
+    name:'logs',
+    component: () => import('src/pages/queueLogs.vue'),
+    meta:{
+      title:'QLogs',
+      roles:['ADMIN']
+    },
+    icon:'library_books',
+    visible:true
+  },
+
+  ///Services
+  {
+    path: '/Services',
+    name:'services',
+    component: () => import('pages/servicesMgt.vue'),
+    meta:{
+      title:'Services',
+      roles:['ADMIN']
+    },
+    icon:'miscellaneous_services',
+    visible:true,
+  },  
+ 
+  ///Settings
+  {
+    path: '/Settings',
+    name:'settings',
+    component: () => import('pages/configSetting.vue'),
+    meta:{
+      title:'Settings',
       roles:['ADMIN']
     },
     icon:'settings',
     visible:true,
-    children:[
-      {
-        path: '/user',
-        component: () => import('pages/sysAdmin/UserMgt.vue'),
-        meta:{
-          title:'Users',
-        },
-        icon:'manage_accounts',
-        visible:true,
-      },
-    ],
   },
+  // log in
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('src/pages/LoginPage.vue'),
+    meta: {
+      title: 'Login'
+    },
+    icon: 'login',
+    visible: true,
+  },
+  //window card
+    {
+      path: '/WindowCard',
+      name:'windowCard',
+      component: () => import('pages/windowCard.vue'),
+      meta:{
+        title:'Window Card',
+        roles:['ADMIN']
+      },
+      icon:'cast',
+      visible:true,
+    },
+    //cashier dashboard
+    {
+      path: '/cashierDashboard',
+      name:'cashierDashboard',
+      component: () => import('pages/cashierDashboard.vue'),
+      meta:{
+        title:'Cashier Dashboard',
+        roles:['CASHIER']
+      },
+      icon:'point_of_sale',
+      visible:true,
+    },
+    //Kiosk
+    {
+      path: '/Kiosk',
+      name:'kioskPage',
+      component: () => import('pages/kioskPage.vue'),
+      meta:{
+        title:'Kiosk',
+        roles:['KIOSK']
+      },
+      icon:'token',
+      visible:true,
+    },
 
   // Always leave this as last one,
   // but you can also remove it

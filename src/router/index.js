@@ -11,16 +11,16 @@ function handleRouteNavigationAndTitleChange(to, from, next) {
 
   document.title = process.env.VUE_APP_NAME + '-' + to.meta.title;
   
-  if (to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll' || cookies.isKey('_UID_')) {
+  // if (to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll' || cookies.isKey('_UID_')) {
     
-    if(cookies.isKey('_UID_') && !(to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll'))
-      checkRoles(to,from,next)
-    else
+  //   if(cookies.isKey('_UID_') && !(to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll'))
+  //     checkRoles(to,from,next)
+  //   else
     next();
-  } else {
-    document.title = process.env.VUE_APP_NAME + '-' + 'Sign In';
-    next({ name: 'signIn' });
-  }
+  // } else {
+  //   document.title = process.env.VUE_APP_NAME + '-' + 'Sign In';
+  //   next({ name: 'signIn' });
+  // }
 }
 
 // Define the function to check user roles

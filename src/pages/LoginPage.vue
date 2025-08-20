@@ -53,10 +53,12 @@ export default defineComponent({
           // Save credentials to local storage
           this.saveCredentials(response.data)
           // Redirect to the dashboard page
-          if (response.data.role !== 'cashier')
-            this.$router.push({ name: 'dashboard' });
-          else
+          if (response.data.role === 'cashier')
             this.$router.push({ name: 'cashierDashboard' });
+          else if (response.data.role === 'releasing')
+            this.$router.push({ name: 'releasingDashboard' });
+          else if (response.data.role === 'admin')
+            this.$router.push({ name: 'dashboard' });
         }
       } catch (error) {
 

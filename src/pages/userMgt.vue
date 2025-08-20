@@ -38,7 +38,7 @@
                 </q-input>
                 <!-- mname -->
                 <q-select label="Role" filled dense outlined class="q-pa-sm" color="primary" v-model="NEW_USER.role"
-                  :options="['admin', 'cashier', 'pl-validator']">
+                  :options="['admin', 'cashier', 'releasing', 'pl-validator']">
                 </q-select>
 
                 <q-input v-if="NEW_USER.role === 'cashier'" label="Window Number" filled dense outlined class="q-pa-sm"
@@ -273,7 +273,7 @@ export default defineComponent({
         numbers: (v) => (!isNaN(v) && /^[0-9.]*$/.test(v)) || !v || "Must be positive numbers only",
         currency: v => (/^[1-9]\d*(((,\d{3}){1})?(\.\d{0,2})?)$/.test(v)) || (/^[1-9]\d*(((,\d{3}){2})?(\.\d{0,2})?)$/.test(v)) || (/^[0]\.\d{0,2}$/.test(v)) || v === "0.00" || v === "0" || 'Currency value only',
         // float: (v) => ((!isNaN(this.StringToNumber(v)) && this.StringToNumber(v).indexOf('.') != -1) || (!isNaN(this.StringToNumber(v)) && /^[0-9]*$/.test(this.StringToNumber(v)))) || "Must be a number"
-        ///^(09|\+639)\d{9}$/ <- if needed full philippine mobile number 
+        ///^(09|\+639)\d{9}$/ <- if needed full philippine mobile number
       },
       NEW_USER: {
         user_id: null,

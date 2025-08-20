@@ -1,5 +1,6 @@
 <template>
-  <q-layout view="lHh Lpr lFf" v-if="$route.name !== 'cashierDashboard' && $route.name !== 'kioskPage'">
+  <q-layout view="lHh Lpr lFf"
+    v-if="$route.name !== 'cashierDashboard' && $route.name !== 'kioskPage' && $route.name !== 'releasingDashboard' && $route.name !== 'overheadDisplay'">
     <q-header reveal elevated>
       <q-toolbar style="background-color: #636060;">
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
@@ -52,7 +53,7 @@
     <!-- <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
-      
+
       :width="250"
       :breakpoint="500"
       bordered
@@ -151,8 +152,8 @@ export default defineComponent({
     // const monitorCookie = () => {
     //   intervalId = setInterval(() => {
     //     console.log('Monitoring',cookies.isKey('_UID_'))
-    //     if(!cookies.isKey('_UID_')){ 
-    //           localStorage.clear();               
+    //     if(!cookies.isKey('_UID_')){
+    //           localStorage.clear();
     //           router.push({name:'signIn'});
     //     }
     //   }, 5000); // Check every second
@@ -205,7 +206,7 @@ export default defineComponent({
       //     return true;
       //   } else {
       //     // User does not have the required role, deny access or redirect to an access denied page
-      //     return false;  
+      //     return false;
       //   }
       // } else {
       //   // No specific roles required for this route, allow access

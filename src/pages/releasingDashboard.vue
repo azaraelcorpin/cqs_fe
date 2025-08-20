@@ -66,7 +66,7 @@
       <q-btn icon="logout" label="Logout" color="negative" @click="logout" />
     </div>
     <!-- align center items -->
-    <div class="text-h5 q-mb-md">Cashier Dashboard</div>
+    <div class="text-h5 q-mb-md">Releasing Dashboard</div>
 
     <!-- Three Columns -->
     <div class="row q-col-gutter-md">
@@ -128,9 +128,7 @@
               <div class="row q-col-gutter-md">
                 <div v-for="item in called" :key="item.queue_id" class="col-12 col-md-6">
                   <q-card class="q-pa-md q-mb-md">
-                    <div class="text-h5">{{ item.ref_code || item.queue_number }}
-                      <q-icon name="campaign" style="cursor: pointer;" @click="callNextSpeech(item)" />
-                    </div>
+                    <div class="text-h5">{{ item.ref_code || item.queue_number }} <q-icon name="campaign" /></div>
                     <div>Priority: {{ item.priority_level }} - {{ item.sl_category }}</div>
                     <q-btn color="primary" label="Serve" @click="serveNext(item)" class="q-mr-sm" />
                     <q-btn color="positive" label="Skip" @click="skipClient(item)" class="q-mr-sm" />
@@ -169,7 +167,8 @@
             <q-btn class="q-mr-sm" color="green" label="Serve" @click="serveNext()" :disable="called.length === 0" />
             <q-btn class="q-mr-sm" color="blue" label="Call Next" @click="callNext()"
               :disable="called.length >= 5 || waiting.length === 0" />
-            <q-btn class="q-mr-sm" color="orange" label="Skip All Called" @click="skipAllCalled()" />
+            <q-btn class="q-mr-sm" color="orange" label="Skip All Called" @click="skipAllCalled()"
+              :disable="called.length === 0" />
           </div>
         </q-card>
       </div>
@@ -198,12 +197,8 @@
                 :filter="skippedSearch">
                 <template v-slot:body-cell-action="props">
                   <q-td align="right">
-                    <q-btn icon="refresh" color="info" dense @click="recall(props.row)" :disable="called.length >= 5">
-                      <q-tooltip>call attention</q-tooltip>
-                    </q-btn>
-                    <q-btn icon="play_arrow" color="primary" dense @click="serveNext(props.row)"
-                      :disable="current !== null"><q-tooltip>
-                        serving</q-tooltip></q-btn>
+                    <q-btn icon="refresh" color="info" dense @click="recall(props.row)" />
+                    <q-tooltip>call attention</q-tooltip>
                   </q-td>
                 </template>
               </q-table>
@@ -223,18 +218,16 @@
 
 
 <script>
-import axios from 'axios'
 import { defineComponent } from 'vue'
 import { useQuasar } from 'quasar'
 import { useCookies } from 'vue3-cookies'
 import api from 'src/API/api'
 import socket from 'src/socket'
 import myDialog from 'src/plugins/myDialog'
-import { set } from 'lodash'
 
 
 export default defineComponent({
-  name: 'CashierDashboard',
+  name: 'ReleasingDashboard',
   setup() {
     const $q = useQuasar()
     const { cookies } = useCookies();
@@ -303,14 +296,6 @@ export default defineComponent({
         this.called = this.called.filter(item => item.status === 'called')
         this.$q.notify({ type: 'positive', message: `Now serving ${this.current.ref_code || this.current.queue_number}` })
         this.refreshAll()
-        // Speech synthesis for serving notification
-        setTimeout(() => {
-          const msg = new SpeechSynthesisUtterance(`Now serving ${this.current.ref_code || this.current.queue_number} at window ${this.user.window_number}`);
-          msg.lang = "en-US"; // or "fil-PH" for Filipino, "ar-SA" for Arabic, etc.
-          msg.rate = 0.8;       // speed (0.1 to 10)
-          msg.pitch = 0.5;      // pitch (0 to 2)
-          speechSynthesis.speak(msg);
-        }, 500);
       } catch (error) {
         this.$q.notify({ type: 'negative', message: 'Failed to serve queue' })
         console.error('Error serving queue:', error)
@@ -320,7 +305,7 @@ export default defineComponent({
     },
 
     async callNext(queue_id) {
-      await api.getCallNext(this.user, 'Payment', queue_id)
+      await api.getCallNext(this.user, 'Releasing', queue_id)
       this.refreshAll();
     },
 
@@ -328,7 +313,6 @@ export default defineComponent({
       if (!this.current) return
       await api.servedQueue(this.user, this.current.queue_id)
       this.$q.notify({ type: 'positive', message: `Served ${this.current.ref_code || this.current.queue_number}` })
-      // Reset current serving
       this.current = null
       this.refreshAll()
     },
@@ -356,14 +340,15 @@ export default defineComponent({
       this.$q.notify({ type: 'info', message: `Recalling ${row.ref_code || row.queue_number}` })
     },
     async refreshAll() {
-      this.waiting = (await api.getWaitingToday('Payment')).data
+      this.waiting = (await api.getWaitingToday('Releasing')).data
       this.history = (await api.getHistory(this.user)).data
       this.called = (await api.getCalledByUser(this.user)).data
-      this.skipped = (await api.getAllSkippedToday()).data
-      this.current = (await api.getTodayCurrentServing(this.user, 'Payment')).data || null
+      this.skipped = (await api.getAllSkippedToday('Releasing')).data
+      this.current = (await api.getTodayCurrentServing(this.user, 'Releasing')).data || null
     },
     new_queue(data) {
-      if (data.services_type !== 'Payment') return
+      if (data.services_type !== 'Releasing') return
+      // Add to waiting if not already there
       this.waiting.push(data)
     },
     called_queue(data) {
@@ -376,7 +361,7 @@ export default defineComponent({
       // Remove from called if exists
       this.called = this.called.filter(item => item.queue_id !== data.queue_id)
       // Add to skipped
-      if (data.service_type === 'Payment')
+      if (data.service_type === 'Releasing')
         this.skipped.push(data)
     },
     async refresh_skipped() {
@@ -478,21 +463,6 @@ export default defineComponent({
       this.$q.notify({ type: 'info', message: 'Logged out' })
       this.$router.push({ name: 'login' });
     },
-
-    /// speeches synthesis for calling next client
-    async callNextSpeech(temp) {
-      let client = temp || this.called[0]
-      if (!client) {
-        this.$q.notify({ type: 'warning', message: 'No client to call' })
-        return
-      }
-      const msg = new SpeechSynthesisUtterance(`Calling ${client.ref_code || client.queue_number} at window ${this.user.window_number}`);
-      msg.lang = "en-US"; // or "fil-PH" for Filipino, "ar-SA" for Arabic, etc.
-      msg.rate = 0.8;       // speed (0.1 to 10)
-      msg.pitch = 0.5;      // pitch (0 to 2)
-      speechSynthesis.speak(msg);
-      this.$q.notify({ type: 'info', message: `Calling ${client.ref_code || client.queue_number} at window ${this.user.window_number}` })
-    }
   },
 
   mounted() {
@@ -502,7 +472,6 @@ export default defineComponent({
     window.addEventListener('keydown', this.handleKey)
     // socket handlers that refresh waiting list when emit 'refresh_waiting' is received
     this.socket.on('new_queue', (queue) => {
-      console.log('New queue received:', queue);
       this.new_queue(queue);
     })
     this.socket.on('called_queue', (queue) => {

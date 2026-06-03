@@ -176,7 +176,7 @@ export default defineComponent({
         currency: v => (/^[1-9]\d*(((,\d{3}){1})?(\.\d{0,2})?)$/.test(v)) || (/^[1-9]\d*(((,\d{3}){2})?(\.\d{0,2})?)$/.test(v)) || (/^[0]\.\d{0,2}$/.test(v)) || v === "0.00" || v === "0" || 'Currency value only',
         date: v => !v || /^\d{4}-\d{2}-\d{2}$/.test(v) || 'Date must be in YYYY-MM-DD format',
         // float: (v) => ((!isNaN(this.StringToNumber(v)) && this.StringToNumber(v).indexOf('.') != -1) || (!isNaN(this.StringToNumber(v)) && /^[0-9]*$/.test(this.StringToNumber(v)))) || "Must be a number"
-        ///^(09|\+639)\d{9}$/ <- if needed full philippine mobile number 
+        ///^(09|\+639)\d{9}$/ <- if needed full philippine mobile number
       },
       filterModel: {
         status: '',

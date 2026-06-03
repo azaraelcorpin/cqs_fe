@@ -474,9 +474,9 @@ export default defineComponent({
     this.socket.on('new_queue', (queue) => {
       this.new_queue(queue);
     })
-    this.socket.on('called_queue', (queue) => {
-      this.called_queue(queue);
-    })
+    // this.socket.on('called_queue', (queue) => {
+    //   this.called_queue(queue);
+    // })
     this.socket.on('skipped_queue', (queue) => {
       this.skipped_queue(queue);
     })

@@ -9,16 +9,16 @@
           </q-card-section>
           <q-separator />
           <q-list separator>
-            <q-item v-for="(counter, index) in nowServing" :key="'ns-' + index">
+            <q-item v-for="(window, index) in nowServing" :key="'ns-' + index">
               <q-item-section>
                 <div class="text-h6">
-                  Counter {{ counter.counter }}:
+                  window {{ window.window }}:
                   <span :class="{
-                    'text-green-9': counter.status === 'Serving',
-                    'text-blue-9': counter.status === 'Available',
-                    'text-grey-7': counter.status === 'Offline'
+                    'text-green-9': window.status === 'serving',
+                    'text-blue-9': window.status === 'available',
+                    'text-grey-7': window.status === 'Offline'
                   }">
-                    {{ counter.number || counter.status }}
+                    {{ window.number || window.status }}
                   </span>
                 </div>
               </q-item-section>
@@ -35,11 +35,11 @@
           </q-card-section>
           <q-separator />
           <q-list separator>
-            <q-item v-for="(counter, index) in recentlyCalled" :key="'rc-' + index">
+            <q-item v-for="(window, index) in recentlyCalled" :key="'rc-' + index">
               <q-item-section>
                 <div class="text-h6">
-                  Counter {{ counter.counter }}:
-                  <span v-for="(num, i) in counter.numbers" :key="'num-' + i" class="q-mr-sm">
+                  window {{ window.window }}:
+                  <span v-for="(num, i) in window.numbers" :key="'num-' + i" class="q-mr-sm">
                     <span :class="num !== '--' ? 'text-yellow-10' : 'text-grey-7'">
                       {{ num }}
                     </span>
@@ -63,28 +63,33 @@
 </template>
 
 <script>
+import axios from 'axios'
+import api from 'src/API/api'
+import socket from 'src/socket'
+
 export default {
   name: 'OverheadDisplay',
 
   data() {
     return {
       nowServing: [
-        { counter: 1, number: 'A105', status: 'Serving' },
-        { counter: 2, number: 'B210', status: 'Serving' },
-        { counter: 3, number: null, status: 'Available' },
-        { counter: 4, number: null, status: 'Offline' }
+        { window: 1, number: null, status: 'Offline' },
+        { window: 2, number: null, status: 'Offline' },
+        { window: 3, number: null, status: 'Offline' },
+        { window: 4, number: null, status: 'Offline' }
       ],
       recentlyCalled: [
-        { counter: 1, numbers: ['A104', 'A103', 'A102', 'A101', 'A100'] },
-        { counter: 2, numbers: ['B209', 'B208', 'B207', 'B206', 'B205'] },
-        { counter: 3, numbers: ['--', '--', '--', '--', '--'] },
-        { counter: 4, numbers: ['--', '--', '--', '--', '--'] }
+        { window: 1, numbers: ['A104', 'A103', 'A102', 'A101', 'Aw00'] },
+        { window: 2, numbers: ['B209', 'B208', 'B207', 'B206', 'B205'] },
+        { window: 3, numbers: ['--', '--', '--', '--', '--'] },
+        { window: 4, numbers: ['--', '--', '--', '--', '--'] }
       ],
       announcements: [
-        'Please proceed to the indicated counter when your number is called.',
+        'Please proceed to the indicated window when your number is called.',
         'Payment cut-off is at 4:30 PM.',
         'Thank you for your cooperation.'
-      ]
+      ],
+
     }
   },
   methods: {
@@ -95,7 +100,125 @@ export default {
       } else {
         console.warn('Text-to-speech not supported.');
       }
+    },
+
+    async initializeData() {
+      let currentCashier = await api.getAllCashierLoggedIn();
+      let res = await api.getTodayCurrentServingAndCalled();
+    console.log('overhead', currentCashier.data)
+
+    if(currentCashier.error) {
+     console.error('Failed to fetch data:', currentCashier.error);
+      return;
     }
+    if(res.error) {
+     console.error('Failed to fetch data:', res.error);
+      res.data = [];
+    }
+    let data = res.data;
+    let cashierData =[...new Set(currentCashier.data)];
+    this.nowServing = cashierData.map(cashier => {
+      let current = data.find(item => item.window_number === cashier.window_number && item.status === 'serving');
+      return {
+        window: cashier.window_number,
+        number: current ? current.queue_number : null,
+        status: cashier.status
+      };
+    });
+    console.log('now serving', this.nowServing)
+    // get a list of distinct windows from the data and sort them
+    let windows = [...new Set(data.map(item => item.window_number))].sort((a, b) => a - b);
+    // update nowServing and recentlyCalled based on the fetched data
+    // this.nowServing = data.map(window_number => {
+    //   let current = data.find(item => item.window_number === window_number && item.status === 'serving');
+    //   return {
+    //     window: window_number,
+    //     number: current ? current.queue_number : null,
+    //     status: current ? 'Serving' : 'Available'
+    //   };
+    // });
+    // For recently called, we will take the last 5 numbers for each window, sorted by
+    this.recentlyCalled = cashierData.map(cashier => {
+      let calledNumbers = data
+        .filter(item => item.window_number === cashier.window_number && item.status === 'called')
+        .sort((a, b) => new Date(a.last_update_on) - new Date(b.last_update_on)) // sort by last_update_on ascending
+        .slice(0, 5) // take the last 5 called numbers
+        .map(item => item.queue_number);
+      return {
+        window: cashier.window_number,
+        numbers: calledNumbers.length > 0 ? calledNumbers : ['--', '--', '--', '--', '--']
+      };
+    });
+    },
+
+    async callNextSpeech(temp) {
+      await this.initializeData();
+      let client = temp
+      if (!client) {
+        this.$q.notify({ type: 'warning', message: 'No client to call' })
+        return
+      }
+      // get the current window number from the recently called list using client.queue_number to find the window number from numbers
+
+      let window = this.recentlyCalled.find(w => w.numbers.includes(client.queue_number))?.window || 'unknown';
+
+      const msg = new SpeechSynthesisUtterance(`Calling ${client.ref_code || client.queue_number} at window ${window}`);
+      msg.lang = "en-US"; // or "fil-PH" for Filipino, "ar-SA" for Arabic, etc.
+      msg.rate = 0.8;       // speed (0.1 to 10)
+      msg.pitch = 0.5;      // pitch (0 to 2)
+      speechSynthesis.speak(msg);
+      this.$q.notify({ type: 'info', message: `Calling ${client.ref_code || client.queue_number} at window ${window}` })
+    },
+
+    // servingSpeech(temp)
+    async servingSpeech(temp) {
+      await this.initializeData();
+      let client = temp
+      if (!client) {
+        this.$q.notify({ type: 'warning', message: 'No client to call' })
+        return
+      }
+        // get the current window number from the recently called list using client.queue_number to find the window number from numbers
+
+      let window = this.nowServing.find(w => w.number === client.queue_number)?.window || 'unknown';
+      const msg = new SpeechSynthesisUtterance(`Now serving ${client.ref_code || client.queue_number} at window ${window}`);
+      msg.lang = "en-US"; // or "fil-PH" for Filipino, "ar-SA" for Arabic, etc.
+      msg.rate = 0.8;       // speed (0.1 to 10)
+      msg.pitch = 0.5;      // pitch (0 to 2)
+      speechSynthesis.speak(msg);
+      this.$q.notify({ type: 'success', message: `Now serving ${client.ref_code || client.queue_number} at window ${window}` })
+    },
+
+    announcementSpeech(temp) {
+      const msg = new SpeechSynthesisUtterance(temp);
+      msg.lang = "en-US"; // or "fil-PH" for Filipino, "ar-SA" for Arabic, etc.
+      msg.rate = 0.8;       // speed (0.1 to 10)
+      msg.pitch = 0.5;      // pitch (0 to 2)
+      speechSynthesis.speak(msg);
+      this.$q.notify({ type: 'info', message: temp })
+    },
+  },
+
+
+  async mounted() {
+    await this.initializeData();
+    console.log('mounted overhead display, initializing socket listeners')
+      socket.off('called_queue') // remove old
+      socket.on('called_queue', (queue) => {
+          this.callNextSpeech(queue);
+        })
+      socket.off('serving_queue') // remove old
+      socket.on('serving_queue', (queue) => {
+          this.servingSpeech(queue);
+        })
+      socket.off('announcement') // remove old
+      socket.on('announcement', (announcement) => {
+          this.announcementSpeech(announcement.message);
+        })
+      socket.off('refresh_data') // remove old
+      socket.on('refresh_data', async () => {
+          await this.initializeData();
+        })
   },
 
   computed: {

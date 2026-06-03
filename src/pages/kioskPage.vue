@@ -80,7 +80,7 @@
               Transaction
             </div>
             <div class="text-subtitle1 text-white">
-              {{ transactionType }} - {{ service }} - {{ category }}
+              {{ transactionType }} - {{ service }} - {{ category }}-{{ fullname }}
             </div>
           </div>
           <q-space />
@@ -104,7 +104,10 @@
             </div>
             <q-input input-class="text-white" v-model="attendingPersonnelRFID"
               label="Please tap the RFID of the attending personnel to validate."
-              :rules="[rules.requiredField, rules.noSpace]" autofocus />
+              :rules="[rules.requiredField, rules.noSpace]"
+              inputmode="none"
+              autocomplete="off"
+              autofocus />
           </q-card-section>
 
           <q-card-actions align="right">
@@ -125,7 +128,10 @@
           </div>
           <q-card-section>
             <q-input input-class="text-white" v-model="rfidData" label="Please tap your RFID."
-              :rules="[rules.requiredField]" autofocus />
+              :rules="[rules.requiredField]"
+              inputmode="none"
+              autocomplete="off"
+              autofocus />
           </q-card-section>
 
           <q-card-actions align="right">
@@ -333,6 +339,11 @@ export default defineComponent({
       this.handleClear();
     },
     handleTapRFIDDialogClose() {
+      if (this.rfidData) {
+        // the system will fetch the client's fullname based on the RFID data and set it to the fullname variable.. from the API response
+        //if the API call fails, it will just set the fullname to null and the user can manually input their fullname
+        this.fullname = this.rfidData; // Assuming the RFID data contains the fullname, adjust as needed
+      }
       this.tapRFIDDialog = false;
     }
   },

@@ -316,6 +316,26 @@ export default {
     }
   },
 
+  //// get today current serving and called
+  async getTodayCurrentServingAndCalled() {
+    var url = api_url + '/queues/today-currentServingAndCalled'
+    const config = await this.getAuthorization();
+    const body = {}
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status == 200) {
+        return response.data;
+      } else {
+        console.log(response);
+        return { error: response }
+      }
+    } catch (error) {
+      console.log(error);
+      this.validateResponse(error)
+      return { error: error.response } ?? error
+    }
+  },
+
   ///// getQueueLogs
   async getQueueLogs(param) {
     var url = api_url + '/queues/filter-logs'
@@ -606,6 +626,7 @@ export default {
     };
     try {
       const response = await axios.post(url, body, config);
+
       if (response && response.data && response.status === 200) {
         return response.data;
       } else {
@@ -632,6 +653,108 @@ export default {
         return response.data;
       } else {
         console.log('servingQueue Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  //api send notification and sound to overhead display
+  async notifyOverheadDisplay(message) {
+    console.log('notifyOverheadDisplay', message);
+    var url = api_url + '/queues/speak'
+    const config = await this.getAuthorization();
+    const body = {
+      message: message
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('notifyOverheadDisplay Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  // api for reload the overhead display
+  async reloadOverheadDisplay() {
+    var url = api_url + '/queues/reload-display'
+    const config = await this.getAuthorization();
+    const body = {};
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('reloadOverheadDisplay Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  // api for cashierlogout
+  async cashierLogout(user) {
+    var url = api_url + '/cashier/logout'
+    const config = await this.getAuthorization();
+    const body = {
+      user_id: user.user_id,
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('cashierLogout Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  // api for cashier on break
+  async cashierOnBreak(user) {
+    var url = api_url + '/cashier/onBreak'
+    const config = await this.getAuthorization();
+    const body = {
+      user_id: user.user_id,
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('cashierOnBreak Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  // get all cashier currently logged in
+  async getAllCashierLoggedIn() {
+    var url = api_url + '/cashier/logged-in'
+    const config = await this.getAuthorization();
+    const body = {};
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('getAllCashierLoggedIn Error');
         return { error: response }
       }
     } catch (error) {

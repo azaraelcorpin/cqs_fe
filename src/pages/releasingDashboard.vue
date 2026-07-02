@@ -63,7 +63,11 @@
       <div style="font-size: 40px;"><strong style="cursor: pointer;" @click="setWindowNumber">WINDOW - {{
         user.window_number ?? ''
           }}<q-tooltip>Click to update Window Number</q-tooltip></strong></div>
-      <q-btn icon="logout" label="Logout" color="negative" @click="logout" />
+      <div>
+        <q-btn style="margin-right: 10px; width: 100px;" icon="logout" label="Logout" color="negative" @click="logout" />
+        <q-btn style="width: 100px;" icon="pause_circle" label="On Break" color="negative" @click="onBreak" />
+      </div>
+
     </div>
     <!-- align center items -->
     <div class="text-h5 q-mb-md">Releasing Dashboard</div>
@@ -128,11 +132,13 @@
               <div class="row q-col-gutter-md">
                 <div v-for="item in called" :key="item.queue_id" class="col-12 col-md-6">
                   <q-card class="q-pa-md q-mb-md">
-                    <div class="text-h5">{{ item.ref_code || item.queue_number }} <q-icon name="campaign" /></div>
+                    <div class="text-h5">{{ item.ref_code || item.queue_number }}
+                      <q-icon name="campaign" style="cursor: pointer;" @click="notifyOverheadDisplay(`Calling ${item.ref_code || item.queue_number}`)" />
+                    </div>
                     <div>Priority: {{ item.priority_level }} - {{ item.sl_category }}</div>
-                    <q-btn color="primary" label="Serve" @click="serveNext(item)" class="q-mr-sm" />
-                    <q-btn color="positive" label="Skip" @click="skipClient(item)" class="q-mr-sm" />
-                    <q-btn color="warning" label="Cancel" @click="cancelQueue(item)" />
+                    <q-btn color="primary" label="Serve" @click="serveNext(item),refreshOverheadDisplay()" class="q-mr-sm" />
+                    <q-btn color="positive" label="Skip" @click="skipClient(item),refreshOverheadDisplay()" class="q-mr-sm" />
+                    <q-btn color="warning" label="Cancel" @click="cancelQueue(item),refreshOverheadDisplay()" />
                   </q-card>
                 </div>
               </div>
@@ -145,18 +151,22 @@
             <q-card class="q-pa-xl q-mb-md flex flex-center bg-primary" style="min-height: 250px;">
 
               <div class="text-white">
+              <q-icon name="campaign" style="cursor: pointer;"
+                @click="notifyOverheadDisplay(`Now serving ${current.ref_code || current.queue_number} at window ${user.window_number}`)"
+                size="30px"
+                />
                 <div class="text-h1 q-mb-md "><strong>{{ current.ref_code || current.queue_number }}</strong></div>
                 <div class="text-subtitle2 q-mb-md" v-if="current.priority_level === 'SL'">Special
                   Priority Lane
                 </div>
                 <div class="text-subtitle2 q-mb-md">Priority: {{ current.priority_level }}</div>
                 <div class="row q-col-gutter-md">
-                  <q-btn color="positive" @click="markServed" class="q-mr-sm">(F10) <br>Served
+                  <q-btn color="positive" @click="markServed(),refreshOverheadDisplay()" class="q-mr-sm">(F10) <br>Served
                   </q-btn>
-                  <q-btn color="warning" @click="skipClient(current), current = null" class="q-mr-sm">
+                  <q-btn color="warning" @click="skipClient(current), current = null, refreshOverheadDisplay()" class="q-mr-sm">
                     (F11) <br> Skip
                   </q-btn>
-                  <q-btn color="negative" @click="cancelQueue(current)">
+                  <q-btn color="negative" @click="cancelQueue(current),refreshOverheadDisplay()">
                     (F12) <br>Cancel
                   </q-btn>
                 </div>
@@ -164,11 +174,10 @@
             </q-card>
           </div>
           <div v-if="!current">
-            <q-btn class="q-mr-sm" color="green" label="Serve" @click="serveNext()" :disable="called.length === 0" />
+            <q-btn class="q-mr-sm" color="green" label="Serve" @click="serveNext(),refreshOverheadDisplay()" :disable="called.length === 0" />
             <q-btn class="q-mr-sm" color="blue" label="Call Next" @click="callNext()"
               :disable="called.length >= 5 || waiting.length === 0" />
-            <q-btn class="q-mr-sm" color="orange" label="Skip All Called" @click="skipAllCalled()"
-              :disable="called.length === 0" />
+            <q-btn class="q-mr-sm" color="orange" label="Skip All Called" @click="skipAllCalled(),refreshOverheadDisplay()" />
           </div>
         </q-card>
       </div>
@@ -197,8 +206,12 @@
                 :filter="skippedSearch">
                 <template v-slot:body-cell-action="props">
                   <q-td align="right">
-                    <q-btn icon="refresh" color="info" dense @click="recall(props.row)" />
+                    <q-btn icon="refresh" color="info" dense @click="recall(props.row),refreshOverheadDisplay()" :disable="called.length >= 5" >
                     <q-tooltip>call attention</q-tooltip>
+                    </q-btn>
+                    <q-btn icon="play_arrow" color="primary" dense @click="serveNext(props.row),refreshOverheadDisplay()"
+                      :disable="current !== null"><q-tooltip>
+                        serving</q-tooltip></q-btn>
                   </q-td>
                 </template>
               </q-table>
@@ -305,7 +318,13 @@ export default defineComponent({
     },
 
     async callNext(queue_id) {
-      await api.getCallNext(this.user, 'Releasing', queue_id)
+     let response = await api.getCallNext(this.user, 'Releasing', queue_id)
+      if (response.error) {
+        this.$q.notify({ type: 'negative', message: response.error.data.message })
+        return
+      }
+      let item = response.data
+      // this.callNextSpeech(item)
       this.refreshAll();
     },
 
@@ -462,6 +481,35 @@ export default defineComponent({
       this.cookies.remove('_UID_');
       this.$q.notify({ type: 'info', message: 'Logged out' })
       this.$router.push({ name: 'login' });
+    },
+
+   // message to speak on overhead display
+    async notifyOverheadDisplay(message) {
+      try{
+        let response = await api.notifyOverheadDisplay(message)
+        if (response.error) {
+          this.$q.notify({ type: 'negative', message: response.error.data.message })
+          return
+          }
+        this.$q.notify({ type: 'positive', message: 'Notification sent to overhead display' })
+      }catch(error){
+        this.$q.notify({ type: 'negative', message: 'Failed to send notification to overhead display' })
+        console.error('Error notifying overhead display:', error)
+      }
+    },
+    // overhead display refresh data
+    async refreshOverheadDisplay() {
+      try{
+        let response = await api.reloadOverheadDisplay()
+        if (response.error) {
+          this.$q.notify({ type: 'negative', message: response.error.data.message })
+          return
+          }
+        this.$q.notify({ type: 'positive', message: 'Overhead display data refreshed' })
+      }catch(error){
+        this.$q.notify({ type: 'negative', message: 'Failed to refresh overhead display data' })
+        console.error('Error refreshing overhead display data:', error)
+      }
     },
   },
 

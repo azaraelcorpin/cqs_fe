@@ -63,7 +63,9 @@
             <div class="row items-center q-col">
               <q-btn label="Tap RFID" color="secondary" @click="tapRFID" class="col-auto" />
               <span class="col-auto">or</span>
-              <q-input filled v-model="fullname" placeholder="Encode Fullname" class="col" autofocus
+              <q-input filled v-model="fullname" placeholder="Encode Fullname" :rules="[ val => (val || '').includes('[') === false || 'Brackets [ ] are not allowed',  val => (val || '').includes(']') === false || 'Brackets [ ] are not allowed']"
+                   class="col" autofocus
+                   @update:model-value="val => value = val.replace(/[\\[\\]]/g, '')"
                 ref="identification" />
             </div>
           </div>
@@ -281,14 +283,6 @@ export default defineComponent({
       }
     },
     async printStub() {
-      // String printerName = "EPSON TM-T82X Receipt"; // null -> default printer
-      //         String queue = payload.getOrDefault("queue", "CBL 001");
-      //         String category = payload.getOrDefault("category", "Senior Citizen");
-      //         String service_type = payload.getOrDefault("service_type", "Payment");
-      //         String service_category = payload.getOrDefault("service_category", "Cashier");
-      //         String message = payload.getOrDefault("message", "Please proceed to the counter when your number is called.");
-      //         String datetime = payload.getOrDefault("datetime", "08/08/2025, 10:35 AM");
-      // send to localhost:8080/api/print using await axios.post method
       const payload = {
         queue: this.print_queueNumber,
         category: this.print_clientCategory,

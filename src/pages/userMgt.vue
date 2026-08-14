@@ -45,6 +45,10 @@
                   color="primary" v-model="NEW_USER.window_number" :rules="[rules.numbers, rules.requiredField]">
                 </q-input>
 
+                <q-input v-if="NEW_USER.user_id" label="RFID" filled dense outlined class="q-pa-sm"
+                  color="primary" v-model="NEW_USER.rfid" :rules="[rules.numbers]">
+                </q-input>
+
                 <div v-if="NEW_USER.user_id">
                   <q-radio v-model="NEW_USER.is_active" :val="true" label="Active" />
                   <q-radio v-model="NEW_USER.is_active" :val="false" label="Inactive" />
@@ -319,6 +323,13 @@ export default defineComponent({
           align: 'left',
           field: 'is_active',
           format: (value) => { return value ? 'Active' : 'Inactive'; },
+          sortable: true
+        },
+        {
+          name: 'rfid',
+          label: 'RFID',
+          align: 'left',
+          field: 'rfid',
           sortable: true
         },
         {

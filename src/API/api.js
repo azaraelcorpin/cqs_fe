@@ -762,4 +762,25 @@ export default {
       return { error: error.response ?? error }
     }
   },
+
+  //getClientByRFID
+  async getClientByRFID(rfid) {
+    var url = api_url + '/queues/client-by-rfid'
+    const config = await this.getAuthorization();
+    const body = {
+      rfid: rfid,
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('getClientByRFID Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  }
 }

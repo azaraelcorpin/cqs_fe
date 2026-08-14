@@ -96,7 +96,7 @@
     <!-- SPL Validation Dialog -->
     <q-dialog v-model="showDialog" persistent>
       <q-card style="min-width: 400px">
-        <q-form @submit="handleSubmit" ref="splForm">
+        <q-form @submit="handleSPLConfirm" ref="splForm">
           <q-card-section class="text-h6 text-center">Special Lane Validation Required</q-card-section>
           <q-card-section class="text-h4 text-center">{{ category }}</q-card-section>
           <q-card-section>
@@ -336,7 +336,31 @@ export default defineComponent({
       if (this.rfidData) {
         // the system will fetch the client's fullname based on the RFID data and set it to the fullname variable.. from the API response
         //if the API call fails, it will just set the fullname to null and the user can manually input their fullname
+        // fetch the fullname from the API based on the RFID data
+        let value = BigInt(this.rfidData); // Convert to BigInt and then to string
+        const rfidString = (value % 16777216n).toString();
+        console.log('rfidString', rfidString);
+        try {
+          api.getClientByRFID(rfidString).then(response => {
+            if (response.data) {
+              let client = response.data[0];
+              this.fullname = client.type+'-('+client.id_number+')-'+client.first_name+' '+client.middle_name??''+' '+client.last_name; // Assuming the API returns an object with a fullname property
+            } else {
+              this.fullname = ''; // Clear fullname if not found
+              myDialog.negative(this.$q, 'Not Found', 'No client found for the provided RFID.');
+            }
+          }).catch(error => {
+            console.error('Error fetching client by RFID:', error);
+            this.fullname = ''; // Clear fullname on error
+            myDialog.negative(this.$q, 'Error', 'An error occurred while fetching client ['+rfidString+'] information.');
+          });
+        } catch (error) {
+          console.error('Error in handleTapRFIDDialogClose:', error);
+          this.fullname = ''; // Clear fullname on error
+          myDialog.negative(this.$q, 'Error', 'An unexpected error occurred.');
+        }
         this.fullname = this.rfidData; // Assuming the RFID data contains the fullname, adjust as needed
+        this.rfidData = ''; // Clear the RFID data after use
       }
       this.tapRFIDDialog = false;
     }

@@ -20,7 +20,7 @@ const routes = [
     component: () => import('src/pages/dashBoard.vue'),
     meta: {
       title: 'Dashboard',
-      roles: []
+      roles: ['admin']
     },
     icon: 'dashboard',
     visible: true,
@@ -32,7 +32,7 @@ const routes = [
     component: () => import('pages/userMgt.vue'),
     meta: {
       title: 'Users',
-      roles: ['ADMIN']
+      roles: ['admin']
     },
     icon: 'groups',
     visible: true,
@@ -44,7 +44,7 @@ const routes = [
     component: () => import('pages/queueCtrl.vue'),
     meta: {
       title: 'Queues',
-      roles: ['ADMIN']
+      roles: ['admin']
     },
     icon: 'receipt_long',
     visible: true,
@@ -56,7 +56,7 @@ const routes = [
     component: () => import('src/pages/queueLogs.vue'),
     meta: {
       title: 'QLogs',
-      roles: ['ADMIN']
+      roles: ['admin']
     },
     icon: 'library_books',
     visible: true
@@ -69,24 +69,13 @@ const routes = [
     component: () => import('pages/servicesMgt.vue'),
     meta: {
       title: 'Services',
-      roles: ['ADMIN']
+      roles: ['admin']
     },
     icon: 'miscellaneous_services',
     visible: true,
   },
 
-  ///Settings
-  {
-    path: '/Settings',
-    name: 'settings',
-    component: () => import('pages/configSetting.vue'),
-    meta: {
-      title: 'Settings',
-      roles: ['ADMIN']
-    },
-    icon: 'settings',
-    visible: true,
-  },
+
   // log in
   {
     path: '/login',
@@ -96,20 +85,20 @@ const routes = [
       title: 'Login'
     },
     icon: 'login',
-    visible: true,
+    visible: false,
   },
-  //window card
-  {
-    path: '/WindowCard',
-    name: 'windowCard',
-    component: () => import('pages/windowCard.vue'),
-    meta: {
-      title: 'Window Card',
-      roles: ['ADMIN']
-    },
-    icon: 'cast',
-    visible: true,
-  },
+  // //window card
+  // {
+  //   path: '/WindowCard',
+  //   name: 'windowCard',
+  //   component: () => import('pages/windowCard.vue'),
+  //   meta: {
+  //     title: 'Window Card',
+  //     roles: ['admin', 'cashier', 'releasing']
+  //   },
+  //   icon: 'cast',
+  //   visible: true,
+  // },
   //cashier dashboard
   {
     path: '/cashierDashboard',
@@ -117,21 +106,9 @@ const routes = [
     component: () => import('pages/cashierDashboard.vue'),
     meta: {
       title: 'Cashier Dashboard',
-      roles: ['CASHIER']
+      roles: ['cashier', 'admin']
     },
     icon: 'point_of_sale',
-    visible: true,
-  },
-  //Kiosk
-  {
-    path: '/Kiosk',
-    name: 'kioskPage',
-    component: () => import('pages/kioskPage.vue'),
-    meta: {
-      title: 'Kiosk',
-      roles: ['KIOSK']
-    },
-    icon: 'token',
     visible: true,
   },
   //releasing dashboard
@@ -141,12 +118,24 @@ const routes = [
     component: () => import('pages/releasingDashboard.vue'),
     meta: {
       title: 'Releasing Dashboard',
-      roles: ['RELEASING']
+      roles: ['releasing', 'admin']
     },
     icon: 'assignment_turned_in',
     visible: true,
   },
 
+  //Kiosk
+  {
+    path: '/Kiosk',
+    name: 'kioskPage',
+    component: () => import('pages/kioskPage.vue'),
+    meta: {
+      title: 'Kiosk',
+      roles: []
+    },
+    icon: 'token',
+    visible: true,
+  },
   //overhead display
   {
     path: '/overheadDisplay',
@@ -154,7 +143,7 @@ const routes = [
     component: () => import('pages/overheadDisplay.vue'),
     meta: {
       title: 'Overhead Display',
-      roles: ['ADMIN', 'KIOSK']
+      roles: ['admin', 'kiosk']
     },
     icon: 'live_tv',
     visible: true,

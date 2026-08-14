@@ -9,29 +9,46 @@ import { useQuasar } from 'quasar';
 function handleRouteNavigationAndTitleChange(to, from, next) {
   const { cookies } = useCookies();
 
-  document.title = process.env.VUE_APP_NAME + '-' + to.meta.title;
-  
-  // if (to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll' || cookies.isKey('_UID_')) {
-    
-  //   if(cookies.isKey('_UID_') && !(to.name === 'signIn'|| to.name === 'accessDenied' || to.name === 'catchAll'))
-  //     checkRoles(to,from,next)
-  //   else
+  if(to.name === 'kioskPage'){
+    document.title = process.env.VUE_APP_NAME + '-' + 'Kiosk';
     next();
-  // } else {
-  //   document.title = process.env.VUE_APP_NAME + '-' + 'Sign In';
-  //   next({ name: 'signIn' });
-  // }
+    return;
+  }
+
+  if(to.name === 'overheadDisplay'){
+    document.title = process.env.VUE_APP_NAME + '-' + 'Overhead Display';
+    next();
+    return;
+  }
+
+  if (to.name === 'login' ) {
+    document.title = process.env.VUE_APP_NAME + '-' + 'Sign In';
+    cookies.remove('_UID_');
+    next();
+    return;
+  }
+
+  document.title = process.env.VUE_APP_NAME + '-' + to.meta.title;
+
+  if (!cookies.isKey('_UID_')) {
+    next({ name: 'login' });
+    return;
+  }
+
+  checkRoles(to, from, next);
 }
 
 // Define the function to check user roles
 function checkRoles(to, from, next) {
   const requiredRoles = to.meta.roles;
+  const { cookies } = useCookies();
+
   to.meta.from = from
   // Check if the route has required roles defined in its meta property
   if (requiredRoles && requiredRoles.length > 0) {
     // Check if the user has the required role
     // next(false);
-    const userRoles = JSON.parse(localStorage.getItem('userRoles')); // Assuming you store user roles in localstorage
+    const userRoles = cookies.get('_UID_').role; // Assuming you store user roles in cookies
     const hasRequiredRole =userRoles?requiredRoles.find(role => userRoles.includes(role)):null;
     const ImDev = localStorage.getItem('ImDev');
     if (hasRequiredRole || ImDev) {
@@ -46,7 +63,7 @@ function checkRoles(to, from, next) {
           if(prevRouteRole)
             next(from);
           else
-            next({name:'dashboard'})
+            next({name:'login'});
         }) ;      
     }
   } else {

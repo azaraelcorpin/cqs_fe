@@ -239,6 +239,7 @@ import api from 'src/API/api'
 import socket from 'src/socket'
 import myDialog from 'src/plugins/myDialog'
 import { set } from 'lodash'
+import { route } from 'quasar/wrappers'
 
 
 export default defineComponent({
@@ -508,6 +509,7 @@ export default defineComponent({
     async onBreak() {
       await api.cashierOnBreak(this.user);
       this.$q.notify({ type: 'info', message: 'On Break' })
+      this.$router.push({ name: 'login' });
     },
 
     /// speeches synthesis for calling next client

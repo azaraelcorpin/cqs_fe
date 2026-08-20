@@ -9,11 +9,11 @@ import { useQuasar } from 'quasar';
 function handleRouteNavigationAndTitleChange(to, from, next) {
   const { cookies } = useCookies();
 
-  if(to.name === 'kioskPage'){
-    document.title = process.env.VUE_APP_NAME + '-' + 'Kiosk';
-    next();
-    return;
-  }
+  // if(to.name === 'kioskPage'){
+  //   document.title = process.env.VUE_APP_NAME + '-' + 'Kiosk';
+  //   next();
+  //   return;
+  // }
 
   if(to.name === 'overheadDisplay'){
     document.title = process.env.VUE_APP_NAME + '-' + 'Overhead Display';
@@ -64,7 +64,7 @@ function checkRoles(to, from, next) {
             next(from);
           else
             next({name:'login'});
-        }) ;      
+        }) ;
     }
   } else {
     // No specific roles required for this route, allow access

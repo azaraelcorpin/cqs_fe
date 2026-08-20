@@ -11,12 +11,12 @@
             <div v-else></div>
           </div>
         </q-toolbar-title>
-        <q-btn @click="asDev(true)">
+        <!-- <q-btn @click="asDev(true)">
           asDev
         </q-btn>
         <q-btn @click="asDev(false)">
           notDev
-        </q-btn>
+        </q-btn> -->
         <q-btn padding="0" round>
           <q-avatar size="40px" v-if="$route.name !== 'signIn'">
             <img v-if="cookies.isKey('_UID_') && cookies.get('_UID_').picture" :src="profilePicture()">
@@ -194,25 +194,18 @@ export default defineComponent({
     // Define the function to check user roles
     checkRoles(roles) {
       const requiredRoles = roles;
-      // // Check if the route has required roles defined in its meta property
-      // if (requiredRoles && requiredRoles.length > 0) {
-      //   // Check if the user has the required role
-      //   // next(false);
-      //   const userRoles = JSON.parse(localStorage.getItem('userRoles')); // Assuming you store user roles in localstorage
-      //   const hasRequiredRole =userRoles?requiredRoles.some(role => userRoles.includes(role)):null;
-      //   const ImDev = localStorage.getItem('ImDev');
-      //   if (hasRequiredRole || ImDev) {
-      //     // User has the required role, allow access to the route
-      //     return true;
-      //   } else {
-      //     // User does not have the required role, deny access or redirect to an access denied page
-      //     return false;
-      //   }
-      // } else {
-      //   // No specific roles required for this route, allow access
-      //   return true;
-      // }
-      return true
+      let userRoles = null;
+      if (this.cookies.isKey('_UID_')) {
+        userRoles = this.cookies.get('_UID_').role;
+      }
+      if (userRoles) {
+        if(roles.includes(userRoles)){
+          return true;
+        }else{
+          return false;
+      }
+      }
+      return false
     },
 
     asDev(param) {

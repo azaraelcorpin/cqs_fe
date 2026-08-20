@@ -7,8 +7,39 @@
         <div class="text-h4 text-weight-bold">
           Cashier Queue Dashboard
         </div>
-        <div class="text-grey-7">
-          July 15, 2026
+        <div class="text-grey-7" style="font-size: 14px; width: 20%;">
+
+          <q-input
+            v-model="date"
+            label="Date"
+            outlined
+            readonly
+          >
+            <template #append>
+              <q-icon
+                name="event"
+                class="cursor-pointer"
+              >
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date v-model="date" mask="YYYY-MM-DD">
+
+                    <div class="row items-center justify-end">
+                      <q-btn
+                        v-close-popup
+                        label="Close"
+                        color="primary"
+                        flat
+                      />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
         </div>
       </div>
 
@@ -17,13 +48,15 @@
           color="primary"
           icon="refresh"
           label="Refresh"
+          @click="refreshDashboard"
           unelevated
+          :loading="loading"
         />
       </div>
     </div>
 
     <!-- KPI Cards -->
-    <div class="row q-col-gutter-md">
+    <!-- <div class="row q-col-gutter-md">
 
       <div
         class="col-lg-3 col-md-6 col-sm-6 col-xs-12"
@@ -57,7 +90,7 @@
         </q-card>
       </div>
 
-    </div>
+    </div> -->
 
     <div class="row q-col-gutter-md q-mt-md">
 
@@ -172,18 +205,18 @@
 
             <div
               v-for="cashier in cashiers"
-              :key="cashier.name"
+              :key="cashier.user_id"
               class="q-mb-lg"
             >
 
               <div class="row justify-between">
 
                 <div class="text-weight-medium">
-                  {{ cashier.name }}
+                  {{ cashier.user_id }}
                 </div>
 
                 <div>
-                  {{ cashier.clients }} Clients
+                  {{ cashier.count }} Clients
                 </div>
 
               </div>
@@ -192,7 +225,7 @@
                 rounded
                 size="10px"
                 color="green"
-                :value="cashier.clients / 50"
+                :value="cashier.count / 50"
               />
 
             </div>
@@ -211,366 +244,168 @@
 
       <!-- Activity -->
 
-      <div class="col-lg-6 col-xs-12">
-
-        <q-card flat bordered>
-
-          <q-card-section>
-
-            <div class="text-h6">
-              Recent Activities
-            </div>
-
-          </q-card-section>
-
-          <q-separator />
-
-          <q-list separator>
-
-            <q-item
-              v-for="log in logs"
-              :key="log.id"
-            >
-
-              <q-item-section avatar>
-
-                <q-avatar
-                  :color="log.color"
-                  text-color="white"
-                  :icon="log.icon"
-                />
-
-              </q-item-section>
-
-              <q-item-section>
-
-                <q-item-label>
-                  {{ log.message }}
-                </q-item-label>
-
-                <q-item-label caption>
-                  {{ log.time }}
-                </q-item-label>
-
-              </q-item-section>
-
-            </q-item>
-
-          </q-list>
-
-        </q-card>
-
-      </div>
-
-      <!-- Today's Queue -->
-
-      <div class="col-lg-6 col-xs-12">
-
-        <q-card flat bordered>
-
-          <q-card-section>
-
-            <div class="text-h6">
-              Today's Queue Overview
-            </div>
-
-          </q-card-section>
-
-          <q-separator />
-
-          <q-markup-table flat>
-
-            <thead>
-
-            <tr>
-
-              <th>Queue</th>
-
-              <th>Status</th>
-
-              <th>Cashier</th>
-
-            </tr>
-
-            </thead>
-
-            <tbody>
-
-            <tr
-              v-for="queue in queues"
-              :key="queue.no"
-            >
-
-              <td>{{ queue.no }}</td>
-
-              <td>
-
-                <q-badge
-                  :color="queue.color"
-                >
-                  {{ queue.status }}
-                </q-badge>
-
-              </td>
-
-              <td>{{ queue.cashier }}</td>
-
-            </tr>
-
-            </tbody>
-
-          </q-markup-table>
-
-        </q-card>
-
-      </div>
 
     </div>
-      <VueApexCharts
-  
-        height="350"
-        :options="chartOptions"
-        :series="series"
+      <VChart
+        :option="option"
+        style="height: 400px; width: 100%;"
       />
-
   </q-page>
 </template>
 
 <script>
-import VueApexCharts from 'vue3-apexcharts'
+import api from "src/API/api";
+import dialog from "src/plugins/myDialog"
+import { useQuasar } from 'quasar'
+import VChart from 'vue-echarts'
+
+import { use } from 'echarts/core'
+import { PieChart } from 'echarts/charts'
+import {
+  TooltipComponent,
+  LegendComponent,
+  TitleComponent,
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+use([
+  CanvasRenderer,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+])
+
+
+
 export default {
   name: 'DashboardPage',
   components: {
-    VueApexCharts
+    VChart
+  },
+
+  setup() {
+    const $q = useQuasar();
+    return {
+      dialog
+    }
   },
 
   data() {
     return {
+      loading: false,
+      timer: null,
+      date: new Date().toISOString().substr(0, 10),
       totalClients: 156,
 
-      cards: [
-        {
-          title: 'Total Clients',
-          value: 156,
-          color: 'primary',
-          icon: 'groups'
-        },
-        {
-          title: 'Served',
-          value: 142,
-          color: 'green',
-          icon: 'check_circle'
-        },
-        {
-          title: 'Waiting',
-          value: 7,
-          color: 'orange',
-          icon: 'schedule'
-        },
-        {
-          title: 'Cancelled',
-          value: 7,
-          color: 'red',
-          icon: 'cancel'
-        }
-      ],
+      // cards: [
+      //   {
+      //     title: 'Total Clients',
+      //     value: 156,
+      //     color: 'primary',
+      //     icon: 'groups'
+      //   },
+      //   {
+      //     title: 'Served',
+      //     value: 142,
+      //     color: 'green',
+      //     icon: 'check_circle'
+      //   },
+      //   {
+      //     title: 'Waiting',
+      //     value: 7,
+      //     color: 'orange',
+      //     icon: 'schedule'
+      //   },
+      //   {
+      //     title: 'Cancelled',
+      //     value: 7,
+      //     color: 'red',
+      //     icon: 'cancel'
+      //   }
+      // ],
+
+      // serving
+      // called
 
       queueStatus: [
         {
-          label: 'Served',
-          value: 142,
+          label: 'served',
+          value: 0,
           color: 'green'
         },
         {
-          label: 'Waiting',
-          value: 7,
-          color: 'orange'
-        },
-        {
-          label: 'Skipped',
-          value: 4,
-          color: 'purple'
-        },
-        {
-          label: 'Cancelled',
-          value: 3,
-          color: 'red'
-        }
-      ],
-
-      services: [
-        {
-          name: 'Transcript / Document Fee',
-          count: 74
-        },
-        {
-          name: 'Scholarship / TES',
-          count: 38
-        },
-        {
-          name: 'Tuition Fee',
-          count: 24
-        },
-        {
-          name: 'Graduation Fee',
-          count: 20
-        }
-      ],
-
-      cashiers: [
-        {
-          name: 'Cashier 1001',
-          clients: 46
-        },
-        {
-          name: 'Cashier 1002',
-          clients: 39
-        },
-        {
-          name: 'Cashier 1003',
-          clients: 33
-        },
-        {
-          name: 'Cashier 1004',
-          clients: 24
-        }
-      ],
-
-      logs: [
-        {
-          id: 1,
-          icon: 'check',
-          color: 'green',
-          message: 'CBL-001 has been served',
-          time: '03:21 PM'
-        },
-        {
-          id: 2,
-          icon: 'call',
-          color: 'primary',
-          message: 'CBL-002 called',
-          time: '03:18 PM'
-        },
-        {
-          id: 3,
-          icon: 'schedule',
-          color: 'orange',
-          message: 'CBL-005 waiting',
-          time: '03:12 PM'
-        },
-        {
-          id: 4,
-          icon: 'close',
-          color: 'red',
-          message: 'CBL-003 cancelled',
-          time: '02:59 PM'
-        }
-      ],
-
-      queues: [
-        {
-          no: 'CBL-001',
-          status: 'Served',
-          cashier: '1001',
-          color: 'green'
-        },
-        {
-          no: 'CBL-002',
-          status: 'Serving',
-          cashier: '1002',
+          label: 'serving',
+          value: 0,
           color: 'blue'
         },
         {
-          no: 'CBL-003',
-          status: 'Waiting',
-          cashier: '-',
+          label: 'called',
+          value: 0,
+          color: 'teal'
+        },
+        {
+          label: 'waiting',
+          value: 0,
           color: 'orange'
         },
         {
-          no: 'CBL-004',
-          status: 'Skipped',
-          cashier: '1003',
+          label: 'skipped',
+          value: 0,
           color: 'purple'
         },
         {
-          no: 'CBL-005',
-          status: 'Cancelled',
-          cashier: '1001',
+          label: 'cancelled',
+          value: 0,
           color: 'red'
         }
       ],
-      series: [74, 38, 24, 20, 10],
 
-      chartOptions: {
-        chart: {
-          type: 'donut',
-          toolbar: {
-            show: false
-          }
+      services: [],
+
+      cashiers: [],
+
+      option : {
+          title: {
+            text: '0',
+            subtext: 'Total Served Clients',
+            left: '49.5%',
+            top: '44%',
+            textAlign: 'center'
+          },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)'
         },
-  plotOptions: {
-  pie: {
-    donut: {
-      size: '70%',
-
-      labels: {
-        show: true,
-
-        total: {
-          show: true,
-          showAlways: true,
-          label: 'Today',
-
-          formatter: function (w) {
-            return w.globals.seriesTotals.reduce((a, b) => a + b, 0) + ' Clients'
-          }
-        }
-      }
-    }
-  }
-},
-
-        labels: [
-          'Transcript',
-          'Scholarship',
-          'Tuition',
-          'Graduation',
-          'Others'
-        ],
 
         legend: {
-          position: 'bottom',
-          fontSize: '14px'
+          bottom: 0,
+          left: 'center',
         },
 
-        dataLabels: {
-          enabled: true,
-          formatter: function (val) {
-            return val.toFixed(1) + '%'
-          }
-        },
-
-        tooltip: {
-          y: {
-            formatter: function (value) {
-              return value + ' Clients'
+          series: [
+            {
+              name: 'Clients',
+              radius: ['40%', '70%'],
+              type: 'pie',
+              label: {
+                show: false,
+                formatter: '{b}: {c} ({d}%)'
+              },
+              // data: apiData.map(item => ({
+              //   name: item.college,
+              //   value: item.total
+              // }))
+              data: [
+                { value: 1048, name: 'College of Engineering' },
+                { value: 735, name: 'College of Arts and Sciences' },
+                { value: 580, name: 'College of Business Administration' },
+                { value: 484, name: 'College of Education' },
+                { value: 300, name: 'College of Nursing' }
+              ]
             }
-          }
+          ]
         },
 
-        stroke: {
-          width: 2,
-          colors: ['#fff']
-        },
-
-        colors: [
-          '#1976D2',
-          '#26A69A',
-          '#F9A825',
-          '#EF5350',
-          '#7E57C2'
-        ]
-      }
     }
   },
 
@@ -581,15 +416,67 @@ export default {
   },
 
   methods: {
-    refreshDashboard() {
+    async refreshDashboard() {
+      this.loading = true
       console.log('Refreshing dashboard...')
       // Later, call your API here
+      try{
+        let response = await api.getDashboardData(this.date)
+        if (response.error) {
+          dialog.negative(this.$q, response.error.statusText, response.error.data.message)
+          return
+        }
+        // this.queueStatus = response.data.statusCount
+        let statusCount = response.data.statusCount
+        //map the status count to the queueStatus array
+        this.queueStatus.forEach(item => {
+          let status = statusCount.find(status => status.status === item.label)
+          console.log('Status:', status)
+          if (status) {
+            item.value = status.count
+          } else {
+            item.value = 0
+          }
+        })
+
+        this.services = response.data.topServices
+        this.cashiers = response.data.cashierPerformance
+        this.option.title.text = this.queueStatus.find(item => item.label === 'served').value.toString();
+        this.option.series[0].data = this.services.map(service => ({
+          name: service.name,
+          value: service.count
+        }))
+        this.loading = false
+      } catch (error) {
+        dialog.negative(this.$q, 'Error', 'Failed to fetch dashboard data')
+        this.loading = false
+      }
     }
+
+    // create a method that will refresh the dashboard data every 5 minutes like cron job
+    // setInterval(() => {
   },
 
   mounted() {
     console.log('Dashboard Loaded')
+    this.date = new Date().toISOString().substr(0, 10)
     // Load dashboard data here later
-  }
+    this.timer = setInterval(() => {
+      this.refreshDashboard();
+    }, 300000); // 5 minutes in milliseconds
+  },
+  unmounted() {
+    // Clear the interval when the component is unmounted
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
+
+  watch: {
+    date(newDate) {
+      this.refreshDashboard();
+      // Call your API here to fetch data for the new date
+    }
+  },
 }
 </script>

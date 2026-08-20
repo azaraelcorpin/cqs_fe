@@ -20,7 +20,7 @@ const routes = [
     component: () => import('src/pages/dashBoard.vue'),
     meta: {
       title: 'Dashboard',
-      roles: ['admin']
+      roles: ['admin','pl-validator']
     },
     icon: 'dashboard',
     visible: true,
@@ -131,7 +131,7 @@ const routes = [
     component: () => import('pages/kioskPage.vue'),
     meta: {
       title: 'Kiosk',
-      roles: []
+      roles: ['pl-validator', 'admin',]
     },
     icon: 'token',
     visible: true,
@@ -143,7 +143,7 @@ const routes = [
     component: () => import('pages/overheadDisplay.vue'),
     meta: {
       title: 'Overhead Display',
-      roles: ['admin', 'kiosk']
+      roles: ['admin', 'pl-validator']
     },
     icon: 'live_tv',
     visible: true,

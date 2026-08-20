@@ -177,7 +177,7 @@ export default defineComponent({
           else if (response.data.role === 'releasing') {
             this.$router.push({ name: 'releasingDashboard' })
           }
-          else if (response.data.role === 'admin') {
+          else if (['admin','pl-validator'].includes(response.data.role)) {
             this.$router.push({ name: 'dashboard' })
           }
 

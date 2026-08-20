@@ -232,6 +232,7 @@ export default defineComponent({
       this.$refs.rfidFullname.focus();
     },
     async handleSubmit() {
+      // this.attendingPersonnelRFID = ''; // Reset RFID input before validation
       if (!this.service) {
         myDialog.negative(this.$q, 'Incomplete', 'Please select a service.');
         return;
@@ -312,10 +313,33 @@ export default defineComponent({
         myDialog.negative(this.$q, 'Print Error', 'An error occurred while printing the queue stub.');
       }
     },
-    handleSPLConfirm() {
+   async handleSPLConfirm() {
       if (this.attendingPersonnelRFID) {
-        this.showDialog = false;
-        alert('SPL validated and form submitted!');
+        let value = BigInt(this.attendingPersonnelRFID); // Convert to BigInt and then to string
+         this.attendingPersonnelRFID = (value % 16777216n).toString();
+        try {
+          let response = await api.getValidatorByRFID(this.attendingPersonnelRFID);
+          console.log('RFID Validation Response:', response);
+          if (response.error) {
+            myDialog.negative(this.$q, response.error.statusText ?? response.error.name, response.error.data.message);
+            this.attendingPersonnelRFID = ''; // Clear the RFID input on error
+          } else {
+            if (response.data) {
+              this.handleSubmit();
+              this.showDialog = false;
+            } else {
+              myDialog.negative(this.$q, 'Invalid RFID', 'The provided RFID is not valid for special lane validation.');
+              this.attendingPersonnelRFID = ''; // Clear the RFID input on error
+            }
+          }
+        } catch (error) {
+          console.error('Error validating personnel RFID:', error);
+          myDialog.negative(this.$q, 'Error', 'An error occurred while validating the RFID.');
+          this.attendingPersonnelRFID = ''; // Clear the RFID input on error
+        }
+      } else {
+        myDialog.negative(this.$q, 'Incomplete', 'Please provide the attending personnel RFID for special lane validation.');
+        this.attendingPersonnelRFID = ''; // Clear the RFID input on error
       }
     },
     handleSPLCancel() {
@@ -344,7 +368,7 @@ export default defineComponent({
           api.getClientByRFID(rfidString).then(response => {
             if (response.data) {
               let client = response.data[0];
-              this.fullname = client.type+'-('+client.id_number+')-'+client.first_name+' '+client.middle_name??''+' '+client.last_name; // Assuming the API returns an object with a fullname property
+              this.fullname = client.type+'-('+client.id_number+'-'+' -('+rfidString+')'+')-'+client.first_name+' '+client.middle_name??''+' '+client.last_name; // Assuming the API returns an object with a fullname property
             } else {
               this.fullname = ''; // Clear fullname if not found
               myDialog.negative(this.$q, 'Not Found', 'No client found for the provided RFID.');

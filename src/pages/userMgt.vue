@@ -25,27 +25,34 @@
                 <div class="text-h5" style="margin: 5px;">{{ !NEW_USER.user_id ? 'New ' : 'Update ' }} User</div>
                 <!-- lname -->
                 <q-input required label="Fullname" dense outlined class="q-pa-sm" color="primary"
-                  v-model="NEW_USER.fullname" :rules="[rules.noSpaceStart, rules.requiredField]" @update:model-value="() => {
+                  v-model="NEW_USER.fullname" :rules="[rules.noSpaceStart, rules.requiredField]"
+                  @update:model-value="()=>{
                     if (!NEW_USER.user_id) {
                       let _username = NEW_USER.fullname
                       NEW_USER.username = _username.toLowerCase().replaceAll(' ', '')
                     }
-                  }">
+                  }"
+                  >
                 </q-input>
                 <!-- fname -->
                 <q-input required label="Username" dense outlined class="q-pa-sm" color="primary"
-                  v-model="NEW_USER.username" :rules="[rules.noSpace, rules.requiredField]" :disable="true">
+                  v-model="NEW_USER.username" :rules="[rules.noSpace, rules.requiredField]" :disable="false">
                 </q-input>
                 <!-- mname -->
                 <q-select label="Role" filled dense outlined class="q-pa-sm" color="primary" v-model="NEW_USER.role"
-                  :options="['admin', 'cashier', 'releasing', 'pl-validator']">
+                  :options="['admin', 'cashier', 'releasing', 'pl-validator']"
+                  @update:model-value="()=>{
+                    NEW_USER.rfid = null
+                  }"
+                  >
                 </q-select>
 
                 <q-input v-if="NEW_USER.role === 'cashier'" label="Window Number" filled dense outlined class="q-pa-sm"
-                  color="primary" v-model="NEW_USER.window_number" :rules="[rules.numbers, rules.requiredField]">
+                  color="primary" v-model="NEW_USER.window_number" :rules="[rules.numbers, rules.requiredField]"
+                  >
                 </q-input>
-
-                <q-input v-if="NEW_USER.user_id" label="RFID" filled dense outlined class="q-pa-sm"
+                <!-- rfid if validator -->
+                 <q-input v-if="NEW_USER.role === 'pl-validator'" label="RFID" filled dense outlined class="q-pa-sm"
                   color="primary" v-model="NEW_USER.rfid" :rules="[rules.numbers]">
                 </q-input>
 
@@ -239,6 +246,7 @@ export default defineComponent({
       this.NEW_USER.is_active = tmp.is_active;
       this.NEW_USER.password = tmp.password;
       this.NEW_USER.window_number = tmp.window_number ?? null;
+      this.NEW_USER.rfid = tmp.rfid ?? null;
       this.newUserDialog = true;
     },
 
@@ -251,6 +259,7 @@ export default defineComponent({
         mname: null,
         email: null,
         window_number: null,
+        rfid: null,
       }
       this.newUserDialog = false;
     }

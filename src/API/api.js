@@ -782,5 +782,47 @@ export default {
       console.log('api', error);
       return { error: error.response ?? error }
     }
+  },
+
+  //get validator by rfid
+  async getValidatorByRFID(rfid) {
+    var url = api_url + '/queues/validator-by-rfid'
+    const config = await this.getAuthorization();
+    const body = {
+      rfid: rfid,
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('getValidatorByRFID Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
+  },
+
+  // get dashboard data
+  async getDashboardData(date) {
+    var url = api_url + '/queues/dashboard-data'
+    const config = await this.getAuthorization();
+    const body = {
+      date: date
+    };
+    try {
+      const response = await axios.post(url, body, config);
+      if (response && response.data && response.status === 200) {
+        return response.data;
+      } else {
+        console.log('getDashboardData Error');
+        return { error: response }
+      }
+    } catch (error) {
+      console.log('api', error);
+      return { error: error.response ?? error }
+    }
   }
 }
